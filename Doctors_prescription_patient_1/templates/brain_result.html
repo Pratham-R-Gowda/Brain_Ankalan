@@ -1,0 +1,363 @@
+{% extends "base.html" %}
+
+{% block title %}Analysis Result - HealthCare AI{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        
+        <!-- Header -->
+        <div class="text-center mb-4">
+            <i class="fas fa-chart-line fa-4x mb-3" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"></i>
+            <h2 class="gradient-text">Analysis Complete</h2>
+            <p class="text-muted">AI-powered brain signal classification results</p>
+        </div>
+
+        {% if result %}
+        <!-- Result Card -->
+        <div class="card mb-4">
+            <div class="card-body p-5 text-center">
+                {% if 'Normal' in result %}
+                    <div class="mb-4">
+                        <i class="fas fa-check-circle fa-5x text-success"></i>
+                    </div>
+                    <h3 class="text-success mb-3">Normal Brain Activity</h3>
+                    <p class="lead text-muted">No abnormal patterns detected</p>
+                {% elif 'Pre-seizure' in result %}
+                    <div class="mb-4">
+                        <i class="fas fa-exclamation-triangle fa-5x text-warning"></i>
+                    </div>
+                    <h3 class="text-warning mb-3">Pre-seizure State Detected</h3>
+                    <p class="lead text-muted">Warning signs present - monitoring recommended</p>
+                {% elif 'Seizure' in result %}
+                    <div class="mb-4">
+                        <i class="fas fa-bolt fa-5x text-danger"></i>
+                    </div>
+                    <h3 class="text-danger mb-3">Seizure Activity Detected</h3>
+                    <p class="lead text-muted">Immediate medical attention required</p>
+                {% elif 'Post-seizure' in result %}
+                    <div class="mb-4">
+                        <i class="fas fa-heartbeat fa-5x text-info"></i>
+                    </div>
+                    <h3 class="text-info mb-3">Post-seizure State</h3>
+                    <p class="lead text-muted">Recovery phase - continued monitoring needed</p>
+                {% else %}
+                    <div class="mb-4">
+                        <i class="fas fa-info-circle fa-5x text-primary"></i>
+                    </div>
+                    <h3 class="text-primary mb-3">Analysis Result</h3>
+                    <p class="lead">{{ result }}</p>
+                {% endif %}
+                
+                <div class="mt-4">
+                    <span class="badge bg-primary px-4 py-2">
+                        <i class="fas fa-robot me-2"></i>AI Classification: {{ result }}
+                    </span>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- CSV Preview -->
+        {% if csv_preview %}
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="mb-3">
+                    <i class="fas fa-table me-2"></i>Data Preview
+                </h5>
+                <div style="max-height: 300px; overflow: auto;">
+                    {{ csv_preview|safe }}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- EEG Signal Visualization -->
+        {% if features %}
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="mb-3">
+                    <i class="fas fa-chart-area me-2"></i>EEG Signal Visualization
+                </h5>
+                <canvas id="eegChart" style="max-height: 400px;"></canvas>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Features Display -->
+        {% if features %}
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="mb-3">
+                    <i class="fas fa-wave-square me-2"></i>Extracted Features (F1–F85)
+                </h5>
+                <div class="row g-2" style="max-height: 400px; overflow-y: auto;">
+                    {% for i in range(1, 86) %}
+                    <div class="col-md-3 col-sm-4 col-6">
+                        <div class="p-2 bg-light rounded">
+                            <small class="text-muted d-block">F{{ i }}</small>
+                            <strong class="text-primary">{{ "%.4f"|format(features[i-1]) }}</strong>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Share Report Section -->
+        <div class="card">
+            <div class="card-body p-4">
+                <h5 class="mb-4">
+                    <i class="fas fa-share-alt me-2"></i>Share Report with Doctor
+                </h5>
+                
+                <form action="{{ url_for('send_brain_report', aadhar_id=request.view_args['aadhar_id']) }}" method="POST">
+                    <div class="row align-items-end">
+                        <div class="col-md-8 mb-3 mb-md-0">
+                            <label class="form-label fw-bold">Select Doctor</label>
+                            <select name="doctor_email" class="form-select form-select-lg" required>
+                                <option value="">Choose a doctor...</option>
+                                {% for doctor in doctors %}
+                                <option value="{{ doctor.email }}">
+                                    <i class="fas fa-user-md"></i> {{ doctor.name }} - {{ doctor.specialization }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <input type="hidden" name="result" value="{{ result }}">
+                            <input type="hidden" name="features" value="{{ features }}">
+                            <button type="submit" class="btn btn-success btn-lg w-100">
+                                <i class="fas fa-paper-plane me-2"></i>Send Report
+                            </button>
+                        </div>
+                    </div>
+                </form>
+                
+                <div class="alert alert-info mt-4 mb-0" role="alert">
+                    <i class="fas fa-info-circle me-2"></i>
+                    The selected doctor will receive this analysis report and can view it in their dashboard
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="text-center mt-4">
+            <a href="{{ url_for('brain_signal_ai', aadhar_id=request.view_args.get('aadhar_id', session.get('patient_aadhar', ''))) }}" class="btn btn-primary me-2">
+                <i class="fas fa-plus-circle me-2"></i>New Analysis
+            </a>
+            <a href="{{ url_for('patient_dashboard') }}" class="btn btn-outline-primary me-2">
+                <i class="fas fa-home me-2"></i>Back to Dashboard
+            </a>
+            <button onclick="window.print()" class="btn btn-outline-secondary">
+                <i class="fas fa-print me-2"></i>Print Report
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>
+@media print {
+    .btn, .navbar, footer {
+        display: none !important;
+    }
+}
+</style>
+
+<!-- Chart.js Library -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+{% if features %}
+<script>
+// EEG Signal Visualization
+document.addEventListener('DOMContentLoaded', function() {
+    const features = {{ features|tojson }};
+    const labels = Array.from({length: 85}, (_, i) => `F${i + 1}`);
+    
+    const ctx = document.getElementById('eegChart').getContext('2d');
+    
+    // Determine color based on result
+    let borderColor = '#667eea';
+    let backgroundColor = 'rgba(102, 126, 234, 0.1)';
+    
+    {% if 'Normal' in result %}
+        borderColor = '#28a745';
+        backgroundColor = 'rgba(40, 167, 69, 0.1)';
+    {% elif 'Pre-seizure' in result %}
+        borderColor = '#ffc107';
+        backgroundColor = 'rgba(255, 193, 7, 0.1)';
+    {% elif 'Seizure' in result %}
+        borderColor = '#dc3545';
+        backgroundColor = 'rgba(220, 53, 69, 0.1)';
+    {% elif 'Post-seizure' in result %}
+        borderColor = '#17a2b8';
+        backgroundColor = 'rgba(23, 162, 184, 0.1)';
+    {% endif %}
+    
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'EEG Signal Features',
+                data: features,
+                borderColor: borderColor,
+                backgroundColor: backgroundColor,
+                borderWidth: 2,
+                tension: 0.4,
+                fill: true,
+                pointRadius: 2,
+                pointHoverRadius: 5,
+                pointBackgroundColor: borderColor,
+                pointBorderColor: '#fff',
+                pointBorderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top',
+                    labels: {
+                        font: {
+                            size: 14,
+                            weight: 'bold'
+                        }
+                    }
+                },
+                title: {
+                    display: true,
+                    text: 'Brain Signal Pattern - {{ result }}',
+                    font: {
+                        size: 16,
+                        weight: 'bold'
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return `${context.label}: ${context.parsed.y.toFixed(4)}`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: false,
+                    title: {
+                        display: true,
+                        text: 'Feature Value',
+                        font: {
+                            size: 12,
+                            weight: 'bold'
+                        }
+                    },
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.05)'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Feature Index',
+                        font: {
+                            size: 12,
+                            weight: 'bold'
+                        }
+                    },
+                    ticks: {
+                        maxRotation: 90,
+                        minRotation: 45,
+                        autoSkip: true,
+                        maxTicksLimit: 20
+                    },
+                    grid: {
+                        display: false
+                    }
+                }
+            },
+            interaction: {
+                intersect: false,
+                mode: 'index'
+            }
+        }
+    });
+});
+</script>
+{% endif %}
+
+{% if result and 'Normal' in result %}
+<!-- Confetti Animation for Normal Result -->
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<script>
+// Celebration confetti when result is Normal! 🎉
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(function() {
+        var duration = 4 * 1000;
+        var animationEnd = Date.now() + duration;
+        var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 9999 };
+
+        function randomInRange(min, max) {
+            return Math.random() * (max - min) + min;
+        }
+
+        var interval = setInterval(function() {
+            var timeLeft = animationEnd - Date.now();
+
+            if (timeLeft <= 0) {
+                return clearInterval(interval);
+            }
+
+            var particleCount = 50 * (timeLeft / duration);
+            
+            // Fire confetti from left side
+            confetti(Object.assign({}, defaults, {
+                particleCount,
+                origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 },
+                colors: ['#28a745', '#20c997', '#17a2b8', '#ffc107', '#fd7e14', '#e83e8c']
+            }));
+            
+            // Fire confetti from right side
+            confetti(Object.assign({}, defaults, {
+                particleCount,
+                origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 },
+                colors: ['#28a745', '#20c997', '#17a2b8', '#ffc107', '#fd7e14', '#e83e8c']
+            }));
+        }, 250);
+
+        // Big celebration burst at the center
+        confetti({
+            particleCount: 150,
+            spread: 100,
+            origin: { y: 0.6 },
+            colors: ['#28a745', '#20c997', '#17a2b8', '#ffc107', '#fd7e14', '#e83e8c', '#6f42c1']
+        });
+        
+        // Additional bursts
+        setTimeout(function() {
+            confetti({
+                particleCount: 100,
+                angle: 60,
+                spread: 55,
+                origin: { x: 0 },
+                colors: ['#28a745', '#ffc107', '#17a2b8']
+            });
+        }, 200);
+        
+        setTimeout(function() {
+            confetti({
+                particleCount: 100,
+                angle: 120,
+                spread: 55,
+                origin: { x: 1 },
+                colors: ['#28a745', '#fd7e14', '#e83e8c']
+            });
+        }, 400);
+    }, 300);
+});
+</script>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+
+{% block title %}Patient Prescriptions{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2><i class="fas fa-file-medical me-2"></i>Patient Prescriptions</h2>
+                {% if patient %}
+                <p class="mb-0">
+                    <strong>Patient:</strong> {{ patient.name }} | 
+                    <strong>Aadhar:</strong> {{ patient.aadhar_id }}
+                </p>
+                {% endif %}
+            </div>
+            <a href="{{ url_for('caretaker_dashboard') }}" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+            </a>
+        </div>
+
+        {% if patient %}
+        <!-- Patient Info Card -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-user me-2"></i>Patient Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <strong>Name:</strong><br>{{ patient.name }}
+                    </div>
+                    <div class="col-md-3">
+                        <strong>Email:</strong><br>{{ patient.email }}
+                    </div>
+                    <div class="col-md-3">
+                        <strong>Phone:</strong><br>{{ patient.phone }}
+                    </div>
+                    <div class="col-md-3">
+                        <strong>Blood Group:</strong><br>
+                        <span class="badge bg-info">{{ patient.blood_group or 'N/A' }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Prescriptions -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-prescription me-2"></i>Prescriptions ({{ prescriptions|length }})
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if prescriptions %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Prescription ID</th>
+                                <th>Doctor</th>
+                                <th>Specialization</th>
+                                <th>Diagnosis</th>
+                                <th>Date</th>
+                                <th>File</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for prescription in prescriptions %}
+                            <tr>
+                                <td><strong>{{ prescription.prescription_id }}</strong></td>
+                                <td>{{ prescription.doctor_name }}</td>
+                                <td>
+                                    <span class="badge bg-primary">{{ prescription.specialization }}</span>
+                                </td>
+                                <td>{{ prescription.diagnosis[:50] }}{% if prescription.diagnosis|length > 50 %}...{% endif %}</td>
+                                <td>{{ prescription.prescription_date.strftime('%Y-%m-%d') if prescription.prescription_date else 'N/A' }}</td>
+                                <td>
+                                    {% if prescription.file_name %}
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-file"></i> {{ prescription.file_type|upper }}
+                                    </span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">No file</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if prescription.file_path %}
+                                    <a href="/{{ prescription.file_path }}" target="_blank" class="btn btn-sm btn-info">
+                                        <i class="fas fa-eye"></i> View
+                                    </a>
+                                    <a href="/{{ prescription.file_path }}" download class="btn btn-sm btn-success">
+                                        <i class="fas fa-download"></i> Download
+                                    </a>
+                                    {% endif %}
+                                    <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#detailsModal{{ prescription.id }}">
+                                        <i class="fas fa-info-circle"></i> Details
+                                    </button>
+                                </td>
+                            </tr>
+
+                            <!-- Details Modal -->
+                            <div class="modal fade" id="detailsModal{{ prescription.id }}" tabindex="-1">
+                                <div class="modal-dialog modal-lg">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">Prescription Details - {{ prescription.prescription_id }}</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <div class="row mb-3">
+                                                <div class="col-md-6">
+                                                    <strong>Doctor:</strong> {{ prescription.doctor_name }}<br>
+                                                    <strong>Specialization:</strong> {{ prescription.specialization }}
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <strong>Date:</strong> {{ prescription.prescription_date.strftime('%Y-%m-%d') if prescription.prescription_date else 'N/A' }}<br>
+                                                    <strong>Created:</strong> {{ prescription.created_at.strftime('%Y-%m-%d %H:%M') if prescription.created_at else 'N/A' }}
+                                                </div>
+                                            </div>
+                                            <hr>
+                                            <div class="mb-3">
+                                                <strong>Diagnosis:</strong>
+                                                <p>{{ prescription.diagnosis or 'N/A' }}</p>
+                                            </div>
+                                            <div class="mb-3">
+                                                <strong>Instructions:</strong>
+                                                <p>{{ prescription.instructions or 'N/A' }}</p>
+                                            </div>
+                                            {% if prescription.file_name %}
+                                            <div class="mb-3">
+                                                <strong>Attached File:</strong><br>
+                                                {{ prescription.file_name }} ({{ prescription.file_type|upper }})
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>No prescriptions found</strong><br>
+                    This patient doesn't have any prescriptions yet.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% else %}
+        <div class="alert alert-danger">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            Patient information not found.
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

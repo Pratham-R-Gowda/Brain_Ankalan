@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Patient OTP Verification</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Google Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Poppins', sans-serif;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #2193b0, #6dd5ed);
+        }
+
+        .otp-card {
+            width: 420px;
+            padding: 35px;
+            background: #ffffff;
+            border-radius: 22px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { transform: translateY(40px); opacity: 0; }
+            to   { transform: translateY(0); opacity: 1; }
+        }
+
+        .otp-input {
+            width: 50px;
+            height: 55px;
+            border-radius: 10px;
+            border: 2px solid #cfe9ff;
+            text-align: center;
+            font-size: 22px;
+            margin: 0 4px;
+            font-weight: 600;
+        }
+
+        .otp-input:focus {
+            border-color: #2193b0;
+            box-shadow: 0 0 6px rgba(33,147,176,0.4);
+        }
+
+        .verify-btn {
+            margin-top: 25px;
+            padding: 12px;
+            font-size: 18px;
+            width: 100%;
+            border-radius: 14px;
+            background: #2193b0;
+            border: none;
+            font-weight: 600;
+        }
+
+        .verify-btn:disabled {
+            background: #9bcbd7;
+        }
+
+        .timer {
+            text-align: center;
+            margin-top: 18px;
+            font-size: 14px;
+            color: #555;
+        }
+
+        .resend-btn {
+            background: none;
+            border: none;
+            color: #2193b0;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .resend-btn:disabled {
+            color: #9dbbc8;
+            cursor: not-allowed;
+        }
+
+        .spinner-border {
+            width: 1.2rem;
+            height: 1.2rem;
+            margin-left: 8px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="otp-card">
+    <h3 class="text-center mb-2">Verify OTP</h3>
+    <p class="text-center text-muted mb-4">Enter the 6-digit OTP sent to your phone</p>
+
+    <form method="POST" id="otpForm">
+
+        <!-- OTP Inputs -->
+        <div class="d-flex justify-content-center mb-3">
+            <input type="text" maxlength="1" class="otp-input" name="d1" required>
+            <input type="text" maxlength="1" class="otp-input" name="d2" required>
+            <input type="text" maxlength="1" class="otp-input" name="d3" required>
+            <input type="text" maxlength="1" class="otp-input" name="d4" required>
+            <input type="text" maxlength="1" class="otp-input" name="d5" required>
+            <input type="text" maxlength="1" class="otp-input" name="d6" required>
+        </div>
+
+        <button class="btn btn-primary verify-btn text-white" id="verifyBtn" type="submit">
+            Verify & Login
+        </button>
+
+        <div class="timer">
+            Resend OTP in <span id="countdown">30</span>s
+        </div>
+
+        <div class="text-center mt-2">
+            <button id="resendBtn" class="resend-btn" disabled onclick="resendOTP(event)">
+                Resend OTP
+            </button>
+        </div>
+
+        <div class="text-center mt-3">
+            <a href="/patient/login">← Back to Login</a>
+        </div>
+
+    </form>
+</div>
+
+<!-- Script for OTP logic -->
+<script>
+    // Auto-focus next input
+    const inputs = document.querySelectorAll(".otp-input");
+
+    inputs.forEach((input, index) => {
+        input.addEventListener("input", () => {
+            if (input.value.length === 1 && index < inputs.length - 1) {
+                inputs[index + 1].focus();
+            }
+        });
+
+        input.addEventListener("keydown", (e) => {
+            if (e.key === "Backspace" && index > 0 && input.value === "") {
+                inputs[index - 1].focus();
+            }
+        });
+    });
+
+    // Countdown Logic
+    let counter = 30;
+    const countdownEl = document.getElementById("countdown");
+    const resendBtn = document.getElementById("resendBtn");
+
+    const timer = setInterval(() => {
+        counter--;
+        countdownEl.innerText = counter;
+
+        if (counter <= 0) {
+            clearInterval(timer);
+            resendBtn.disabled = false;
+            countdownEl.innerText = "0";
+        }
+    }, 1000);
+
+    // Loading Spinner on Verify
+    const verifyBtn = document.getElementById("verifyBtn");
+    const otpForm = document.getElementById("otpForm");
+
+    otpForm.addEventListener("submit", () => {
+        verifyBtn.disabled = true;
+        verifyBtn.innerHTML = `Verifying... <span class="spinner-border spinner-border-sm"></span>`;
+        
+        // Put the digits together before submitting
+        const otp = Array.from(inputs).map(i => i.value).join("");
+        
+        const hiddenInput = document.createElement("input");
+        hiddenInput.type = "hidden";
+        hiddenInput.name = "otp";
+        hiddenInput.value = otp;
+        otpForm.appendChild(hiddenInput);
+    });
+
+    // Resend OTP Button Function
+    function resendOTP(event) {
+        event.preventDefault();
+
+        resendBtn.disabled = true;
+        resendBtn.innerHTML = `Sending... <span class="spinner-border spinner-border-sm"></span>`;
+
+        fetch("/patient/resend-otp")  // This POST route you will add in backend
+            .then(() => {
+                resendBtn.innerHTML = "OTP Sent!";
+                setTimeout(() => {
+                    resendBtn.innerHTML = "Resend OTP";
+                }, 3000);
+            });
+    }
+</script>
+
+</body>
+</html>

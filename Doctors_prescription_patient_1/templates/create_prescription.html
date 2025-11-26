@@ -1,0 +1,318 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4 class="mb-0">Upload Prescription</h4>
+            <a href="{{ url_for('patient_details') }}" class="btn btn-outline-secondary">Back to Patient</a>
+        </div>
+        <div class="card">
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data" id="prescriptionForm">
+                    <div class="mb-3">
+                        <label for="diagnosis" class="form-label">Diagnosis *</label>
+                        <textarea class="form-control" id="diagnosis" name="diagnosis" rows="3" required 
+                                  placeholder="Enter the diagnosis..."></textarea>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Prescription File (Optional)</label>
+                        <small class="text-muted d-block mb-2">You can upload a file or take a photo, or skip this step</small>
+                        
+                        <!-- Tab Navigation -->
+                        <ul class="nav nav-tabs mb-3" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="upload-tab" data-bs-toggle="tab" data-bs-target="#upload-section" type="button">
+                                    <i class="fas fa-upload me-2"></i>Upload File
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="camera-tab" data-bs-toggle="tab" data-bs-target="#camera-section" type="button">
+                                    <i class="fas fa-camera me-2"></i>Take Photo
+                                </button>
+                            </li>
+                        </ul>
+
+                        <!-- Tab Content -->
+                        <div class="tab-content">
+                            <!-- File Upload Tab -->
+                            <div class="tab-pane fade show active" id="upload-section" role="tabpanel">
+                                <div class="p-3 bg-light rounded">
+                                    <input type="file" class="form-control" id="prescription_file" name="prescription_file" 
+                                           accept=".png,.jpg,.jpeg,.gif,.pdf,.doc,.docx">
+                                    <div class="form-text mt-2">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        Allowed: PNG, JPG, JPEG, GIF, PDF, DOC, DOCX (Max: 16MB)
+                                    </div>
+                                    <div id="filePreview" class="mt-3"></div>
+                                </div>
+                            </div>
+
+                            <!-- Camera Tab -->
+                            <div class="tab-pane fade" id="camera-section" role="tabpanel">
+                                <div class="p-3 bg-light rounded">
+                                    <!-- Camera View Container -->
+                                    <div class="camera-container mb-3">
+                                        <div id="cameraPlaceholder" class="text-center p-5 bg-white rounded border">
+                                            <i class="fas fa-camera fa-4x text-muted mb-3"></i>
+                                            <p class="text-muted">Click "Start Camera" to begin</p>
+                                        </div>
+                                        <video id="video" autoplay playsinline class="w-100 rounded shadow" style="display: none; max-height: 400px; object-fit: cover;"></video>
+                                        <canvas id="canvas" style="display: none;"></canvas>
+                                    </div>
+                                    
+                                    <!-- Camera Controls -->
+                                    <div class="d-grid gap-2">
+                                        <button type="button" id="startCamera" class="btn btn-info btn-lg">
+                                            <i class="fas fa-video me-2"></i>Start Camera
+                                        </button>
+                                        <button type="button" id="capturePhoto" class="btn btn-success btn-lg" disabled style="display: none;">
+                                            <i class="fas fa-camera me-2"></i>Capture Photo
+                                        </button>
+                                        <button type="button" id="retakePhoto" class="btn btn-warning btn-lg" style="display: none;">
+                                            <i class="fas fa-redo me-2"></i>Retake Photo
+                                        </button>
+                                    </div>
+                                    
+                                    <!-- Photo Preview -->
+                                    <div id="photoPreview" class="mt-3"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Hidden input for camera photo -->
+                        <input type="hidden" id="camera_photo" name="camera_photo">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="instructions" class="form-label">Instructions *</label>
+                        <textarea class="form-control" id="instructions" name="instructions" rows="3" required 
+                                  placeholder="Enter instructions for the patient..."></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Upload Prescription</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript for camera and file upload -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const startCameraBtn = document.getElementById('startCamera');
+    const capturePhotoBtn = document.getElementById('capturePhoto');
+    const retakePhotoBtn = document.getElementById('retakePhoto');
+    const photoPreview = document.getElementById('photoPreview');
+    const cameraPhotoInput = document.getElementById('camera_photo');
+    const fileInput = document.getElementById('prescription_file');
+    const filePreview = document.getElementById('filePreview');
+    
+    let stream = null;
+    let photoCaptured = false;
+
+    // Start camera
+    startCameraBtn.addEventListener('click', async function() {
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({
+                video: {
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 },
+                    facingMode: { ideal: "environment" }
+                }
+            });
+        } catch(err1) {
+            // Try front camera if rear camera is not available
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    }
+                });
+            } catch(err2) {
+                alert("Camera access denied. Please allow camera access in your browser settings.");
+                return;
+            }
+        }
+
+        // Hide placeholder and show video
+        document.getElementById('cameraPlaceholder').style.display = 'none';
+        video.style.display = 'block';
+        video.srcObject = stream;
+        
+        // Update buttons
+        capturePhotoBtn.disabled = false;
+        capturePhotoBtn.style.display = 'block';
+        startCameraBtn.style.display = 'none';
+    });
+
+
+    // Capture photo
+    capturePhotoBtn.addEventListener('click', function() {
+        if (stream) {
+            const context = canvas.getContext('2d');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            
+            // Convert to data URL
+            const photoData = canvas.toDataURL('image/jpeg', 0.9);
+            cameraPhotoInput.value = photoData;
+            
+            // Hide video and show preview
+            video.style.display = 'none';
+            
+            // Show preview
+            photoPreview.innerHTML = `
+                <div class="card">
+                    <div class="card-body">
+                        <div class="alert alert-success mb-3">
+                            <i class="fas fa-check-circle me-2"></i>
+                            <strong>Photo Captured Successfully!</strong>
+                        </div>
+                        <img src="${photoData}" class="img-fluid rounded shadow" style="max-width: 100%;">
+                        <p class="text-center text-muted mt-3 mb-0">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Photo is ready to be uploaded with the prescription
+                        </p>
+                    </div>
+                </div>
+            `;
+            
+            // Update UI
+            capturePhotoBtn.style.display = 'none';
+            retakePhotoBtn.style.display = 'block';
+            photoCaptured = true;
+            
+            // Stop camera stream to save battery
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+            }
+        }
+    });
+
+    // Retake photo
+    retakePhotoBtn.addEventListener('click', function() {
+        photoPreview.innerHTML = '';
+        cameraPhotoInput.value = '';
+        retakePhotoBtn.style.display = 'none';
+        photoCaptured = false;
+        
+        // Show placeholder and reset buttons
+        document.getElementById('cameraPlaceholder').style.display = 'block';
+        video.style.display = 'none';
+        startCameraBtn.style.display = 'block';
+        capturePhotoBtn.style.display = 'none';
+    });
+
+    // File upload preview
+    fileInput.addEventListener('change', function() {
+        const file = this.files[0];
+        filePreview.innerHTML = '';
+        cameraPhotoInput.value = ''; // Clear camera photo if file is selected
+        
+        if (file) {
+            const fileSize = (file.size / (1024 * 1024)).toFixed(2);
+            const fileType = file.name.split('.').pop().toUpperCase();
+            
+            const previewHTML = `
+                <div class="alert alert-info">
+                    <strong>Selected File:</strong> ${file.name}<br>
+                    <strong>Type:</strong> ${fileType}<br>
+                    <strong>Size:</strong> ${fileSize} MB
+                </div>
+            `;
+            
+            filePreview.innerHTML = previewHTML;
+            
+            // Preview for images
+            if (file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const imgPreview = `
+                        <div class="mt-2">
+                            <strong>Preview:</strong><br>
+                            <img src="${e.target.result}" class="img-thumbnail mt-2" style="max-height: 200px;">
+                        </div>
+                    `;
+                    filePreview.innerHTML += imgPreview;
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+    });
+
+    // Form validation (optional - warn if both file and photo are selected)
+    document.getElementById('prescriptionForm').addEventListener('submit', function(e) {
+        const hasFile = fileInput.files.length > 0;
+        const hasPhoto = cameraPhotoInput.value !== '';
+        
+        if (hasFile && hasPhoto) {
+            e.preventDefault();
+            alert('Please choose only one option: either upload a file OR take a photo (not both).');
+            return false;
+        }
+        
+        // Allow submission even if no file/photo is provided
+        return true;
+    });
+});
+</script>
+
+<!-- Add Font Awesome for icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+<style>
+.img-thumbnail {
+    max-width: 100%;
+    height: auto;
+}
+
+.camera-container {
+    position: relative;
+    background: #000;
+    border-radius: 12px;
+    overflow: hidden;
+    min-height: 300px;
+}
+
+#cameraPlaceholder {
+    min-height: 300px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+#video {
+    width: 100%;
+    height: auto;
+    background: #000;
+}
+
+.nav-tabs .nav-link {
+    border-radius: 8px 8px 0 0;
+    font-weight: 600;
+}
+
+.nav-tabs .nav-link.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-color: transparent;
+}
+
+#photoPreview .card {
+    border: none;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+#photoPreview img {
+    border: 3px solid #28a745;
+}
+</style>
+{% endblock %}

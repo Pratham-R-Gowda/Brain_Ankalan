@@ -1,0 +1,224 @@
+{% extends "base.html" %}
+
+{% block title %}Brain Signal Analysis - HealthCare AI{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <!-- Header -->
+        <div class="text-center mb-4">
+            <div class="mb-3">
+                <i class="fas fa-brain fa-4x" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"></i>
+            </div>
+            <h2 class="gradient-text mb-2">AI Brain Signal Analysis</h2>
+            <p class="text-muted">
+                <i class="fas fa-id-card me-2"></i>Patient Aadhar: <strong>{{ aadhar_id }}</strong>
+            </p>
+        </div>
+
+        <!-- Main Card -->
+        <div class="card">
+            <div class="card-body p-4">
+                <form method="POST" enctype="multipart/form-data" id="analysisForm">
+                    
+                    <!-- Tab Navigation -->
+                    <ul class="nav nav-pills mb-4 justify-content-center" id="inputTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="file-tab" data-bs-toggle="pill" data-bs-target="#file-upload" type="button">
+                                <i class="fas fa-file-upload me-2"></i>File Upload
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="text-tab" data-bs-toggle="pill" data-bs-target="#text-input" type="button">
+                                <i class="fas fa-keyboard me-2"></i>Text Input
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="manual-tab" data-bs-toggle="pill" data-bs-target="#manual-input" type="button">
+                                <i class="fas fa-edit me-2"></i>Manual Entry
+                            </button>
+                        </li>
+                    </ul>
+
+                    <!-- Tab Content -->
+                    <div class="tab-content" id="inputTabsContent">
+                        
+                        <!-- File Upload Tab -->
+                        <div class="tab-pane fade show active" id="file-upload" role="tabpanel">
+                            <div class="text-center p-5">
+                                <div class="mb-4">
+                                    <i class="fas fa-cloud-upload-alt fa-5x text-primary" style="opacity: 0.3;"></i>
+                                </div>
+                                <h5 class="mb-3">Upload EEG Data File</h5>
+                                <p class="text-muted mb-4">Supported formats: CSV, TXT, JSON, EDF</p>
+                                
+                                <div class="mb-3">
+                                    <label for="signal_file" class="btn btn-primary btn-lg">
+                                        <i class="fas fa-folder-open me-2"></i>Choose File
+                                    </label>
+                                    <input type="file" class="d-none" id="signal_file" name="signal_file" accept=".txt,.csv,.json,.edf" onchange="displayFileName(this)">
+                                </div>
+                                
+                                <div id="fileName" class="text-success fw-bold"></div>
+                                
+                                <div class="alert alert-info mt-4" role="alert">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    <strong>Tip:</strong> CSV files should contain columns F1 through F85 with EEG feature values
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Text Input Tab -->
+                        <div class="tab-pane fade" id="text-input" role="tabpanel">
+                            <div class="p-4">
+                                <h5 class="mb-3">
+                                    <i class="fas fa-keyboard me-2"></i>Paste EEG Features
+                                </h5>
+                                <p class="text-muted mb-3">Enter 85 comma-separated feature values (F1 through F85)</p>
+                                
+                                <textarea class="form-control" name="signal_text" rows="6" 
+                                          placeholder="Example: 1.0,0.760188,0.760727,1.0,1.0,0.619948,0.760190,0.619946,0.760204,0.620021,..."></textarea>
+                                
+                                <div class="alert alert-warning mt-3" role="alert">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    Ensure you have exactly <strong>85 numeric values</strong> separated by commas
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Manual Entry Tab -->
+                        <div class="tab-pane fade" id="manual-input" role="tabpanel">
+                            <div class="p-4">
+                                <h5 class="mb-3">
+                                    <i class="fas fa-edit me-2"></i>Manual Feature Entry
+                                </h5>
+                                <p class="text-muted mb-4">Enter values for features F1 through F85</p>
+                                
+                                <div class="row g-3" style="max-height: 500px; overflow-y: auto;">
+                                    {% for i in range(1, 86) %}
+                                    <div class="col-md-3 col-sm-4 col-6">
+                                        <label class="form-label small fw-bold">F{{ i }}</label>
+                                        <input type="number" step="any" class="form-control form-control-sm" 
+                                               name="F{{ i }}" placeholder="0.0">
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                
+                                <div class="alert alert-info mt-4" role="alert">
+                                    <i class="fas fa-lightbulb me-2"></i>
+                                    <strong>Tip:</strong> Leave fields empty if you don't have all values. The system will use default values.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Submit and Clear Buttons -->
+                    <div class="text-center mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg px-5 me-3">
+                            <i class="fas fa-brain me-2"></i>Analyze with AI
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary btn-lg px-5" onclick="clearForm()">
+                            <i class="fas fa-eraser me-2"></i>Clear Form
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Info Cards -->
+        <div class="row mt-4 g-3">
+            <div class="col-md-4">
+                <div class="card glass-effect h-100">
+                    <div class="card-body text-center">
+                        <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+                        <h6>Normal</h6>
+                        <p class="small text-muted mb-0">Healthy brain activity</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card glass-effect h-100">
+                    <div class="card-body text-center">
+                        <i class="fas fa-exclamation-triangle fa-2x text-warning mb-2"></i>
+                        <h6>Pre-seizure</h6>
+                        <p class="small text-muted mb-0">Warning signs detected</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card glass-effect h-100">
+                    <div class="card-body text-center">
+                        <i class="fas fa-bolt fa-2x text-danger mb-2"></i>
+                        <h6>Seizure / Post-seizure</h6>
+                        <p class="small text-muted mb-0">Immediate attention needed</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function displayFileName(input) {
+    const fileName = input.files[0]?.name;
+    const fileNameDiv = document.getElementById('fileName');
+    if (fileName) {
+        fileNameDiv.innerHTML = `<i class="fas fa-file-alt me-2"></i>Selected: ${fileName}`;
+    }
+}
+
+function clearForm() {
+    // Clear file input
+    const fileInput = document.getElementById('signal_file');
+    if (fileInput) {
+        fileInput.value = '';
+        document.getElementById('fileName').innerHTML = '';
+    }
+    
+    // Clear text input
+    const textInput = document.querySelector('textarea[name="signal_text"]');
+    if (textInput) {
+        textInput.value = '';
+    }
+    
+    // Clear all manual input fields
+    const manualInputs = document.querySelectorAll('input[name^="F"]');
+    manualInputs.forEach(input => {
+        input.value = '';
+    });
+    
+    // Show success message
+    const alertDiv = document.createElement('div');
+    alertDiv.className = 'alert alert-success alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3';
+    alertDiv.style.zIndex = '9999';
+    alertDiv.innerHTML = `
+        <i class="fas fa-check-circle me-2"></i>
+        Form cleared successfully!
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.body.appendChild(alertDiv);
+    
+    // Auto-remove after 3 seconds
+    setTimeout(() => {
+        alertDiv.remove();
+    }, 3000);
+}
+</script>
+
+<style>
+.nav-pills .nav-link {
+    border-radius: 12px;
+    padding: 0.75rem 1.5rem;
+    margin: 0 0.25rem;
+    transition: all 0.3s ease;
+}
+
+.nav-pills .nav-link.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.tab-content {
+    min-height: 400px;
+}
+</style>
+{% endblock %}

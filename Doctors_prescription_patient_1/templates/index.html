@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+
+{% block title %}Welcome - HealthCare AI System{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="row mb-5">
+    <div class="col-lg-10 mx-auto text-center">
+        <div class="mb-4" style="animation: fadeIn 0.8s ease;">
+            <i class="fas fa-brain fa-4x mb-3" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"></i>
+        </div>
+        <h1 class="display-4 fw-bold mb-3" style="animation: fadeIn 1s ease;">
+            Welcome to HealthCare AI System
+        </h1>
+        <p class="lead mb-4" style="animation: fadeIn 1.2s ease;">
+            Advanced AI-powered platform for doctors, caretakers, and patients
+        </p>
+        <p class="text-muted" style="animation: fadeIn 1.4s ease;">
+            <i class="fas fa-shield-alt me-2"></i>Secure • 
+            <i class="fas fa-bolt ms-2 me-2"></i>Fast • 
+            <i class="fas fa-brain ms-2 me-2"></i>AI-Powered
+        </p>
+    </div>
+</div>
+
+<!-- Feature Cards -->
+<div class="row g-4 mb-5">
+    <!-- Doctor Card -->
+    <div class="col-md-4">
+        <div class="card h-100 hover-lift">
+            <div class="card-body text-center">
+                <div class="mb-4">
+                    <div class="d-inline-flex align-items-center justify-content-center" 
+                         style="width: 80px; height: 80px; border-radius: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                        <i class="fas fa-user-md fa-2x text-white"></i>
+                    </div>
+                </div>
+                <h5 class="card-title mb-3">For Doctors</h5>
+                <p class="card-text mb-4">
+                    Access patient records, analyze brain signals with AI, and create digital prescriptions
+                </p>
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('doctor_login') }}" class="btn btn-primary">
+                        <i class="fas fa-sign-in-alt me-2"></i>Login
+                    </a>
+                    <a href="{{ url_for('doctor_signup') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-user-plus me-2"></i>Sign Up
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Caretaker Card -->
+    <div class="col-md-4">
+        <div class="card h-100 hover-lift">
+            <div class="card-body text-center">
+                <div class="mb-4">
+                    <div class="d-inline-flex align-items-center justify-content-center" 
+                         style="width: 80px; height: 80px; border-radius: 20px; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                        <i class="fas fa-user-nurse fa-2x text-white"></i>
+                    </div>
+                </div>
+                <h5 class="card-title mb-3">For Caretakers</h5>
+                <p class="card-text mb-4">
+                    View patient task lists, manage care schedules, and access medical records
+                </p>
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('caretaker_login') }}" class="btn btn-success">
+                        <i class="fas fa-sign-in-alt me-2"></i>Login
+                    </a>
+                    <a href="{{ url_for('caretaker_signup') }}" class="btn btn-outline-success">
+                        <i class="fas fa-user-plus me-2"></i>Sign Up
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Patient Card -->
+    <div class="col-md-4">
+        <div class="card h-100 hover-lift">
+            <div class="card-body text-center">
+                <div class="mb-4">
+                    <div class="d-inline-flex align-items-center justify-content-center" 
+                         style="width: 80px; height: 80px; border-radius: 20px; background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                        <i class="fas fa-user fa-2x text-white"></i>
+                    </div>
+                </div>
+                <h5 class="card-title mb-3">For Patients</h5>
+                <p class="card-text mb-4">
+                    Access medical records, view prescriptions, and get AI-powered brain signal analysis
+                </p>
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('patient_login') }}" class="btn btn-info">
+                        <i class="fas fa-sign-in-alt me-2"></i>Login
+                    </a>
+                    <a href="{{ url_for('patient_signup') }}" class="btn btn-outline-info">
+                        <i class="fas fa-user-plus me-2"></i>Sign Up
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Features Section -->
+<div class="row mt-5">
+    <div class="col-lg-10 mx-auto">
+        <div class="card glass-effect">
+            <div class="card-body p-4">
+                <h3 class="text-center mb-4 gradient-text">
+                    <i class="fas fa-star me-2"></i>Key Features
+                </h3>
+                <div class="row g-4">
+                    <div class="col-md-3 text-center">
+                        <i class="fas fa-brain fa-3x mb-3" style="color: #667eea;"></i>
+                        <h6>AI Brain Analysis</h6>
+                        <p class="small text-muted">Advanced EEG signal classification</p>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <i class="fas fa-file-medical fa-3x mb-3" style="color: #4facfe;"></i>
+                        <h6>Digital Prescriptions</h6>
+                        <p class="small text-muted">Secure & tamper-proof records</p>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <i class="fas fa-shield-alt fa-3x mb-3" style="color: #43e97b;"></i>
+                        <h6>Data Security</h6>
+                        <p class="small text-muted">End-to-end encryption</p>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <i class="fas fa-chart-line fa-3x mb-3" style="color: #f093fb;"></i>
+                        <h6>Real-time Analytics</h6>
+                        <p class="small text-muted">Instant health insights</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+</style>
+{% endblock %}

@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">Verify OTP</h4>
+                <a href="{{ url_for('doctor_dashboard') }}" class="btn btn-outline-secondary">Back to Dashboard</a>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <p>OTP has been sent to the patient's email. Please ask the patient to share the OTP with you.</p>
+                </div>
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="otp" class="form-label">Enter OTP</label>
+                        <input type="text" class="form-control" id="otp" name="otp" 
+                               pattern="[0-9]{6}" title="6-digit OTP" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Verify OTP</button>
+                    <a href="{{ url_for('search_patient') }}" class="btn btn-secondary">Back to Search</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

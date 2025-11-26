@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Search Prescriptions</h2>
+            <a href="{{ url_for('caretaker_dashboard') }}" class="btn btn-outline-secondary">Back to Dashboard</a>
+        </div>
+        
+        <div class="card mb-4">
+            <div class="card-body">
+                <form method="POST" class="row">
+                    <div class="col-md-8">
+                        <div class="mb-3">
+                            <label for="aadhar_id" class="form-label">Patient Aadhar ID</label>
+                            <input type="text" class="form-control" id="aadhar_id" name="aadhar_id" 
+                                   pattern="[0-9]{12}" title="12-digit Aadhar number" required>
+                        </div>
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end">
+                        <button type="submit" class="btn btn-success">Search Prescriptions</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {% if patient %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Patient Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <p><strong>Name:</strong> {{ patient.name }}</p>
+                    </div>
+                    <div class="col-md-4">
+                        <p><strong>Aadhar ID:</strong> {{ patient.aadhar_id }}</p>
+                    </div>
+                    <div class="col-md-4">
+                        <p><strong>Phone:</strong> {{ patient.phone }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if prescriptions %}
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Prescriptions ({{ prescriptions|length }} found)</h5>
+            </div>
+            <div class="card-body">
+                {% for prescription in prescriptions %}
+                <div class="card mb-4 border-success">
+                    <div class="card-header bg-light">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0 text-success">Prescription ID: {{ prescription.prescription_id }}</h6>
+                            <span class="badge bg-success">{{ prescription.prescription_date }}</span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <p><strong>Doctor:</strong> Dr. {{ prescription.doctor_name }}</p>
+                                <p><strong>Specialization:</strong> {{ prescription.specialization }}</p>
+                                <p><strong>Diagnosis:</strong> {{ prescription.diagnosis }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Date:</strong> {{ prescription.prescription_date }}</p>
+                                {% if prescription.file_type %}
+                                <p><strong>File Type:</strong> {{ prescription.file_type.upper() }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <h6 class="border-bottom pb-2">Prescription File</h6>
+                                {% if prescription.file_name and prescription.file_path %}
+                                <div class="d-flex gap-2 align-items-center">
+                                    {% if prescription.file_type in ['png', 'jpg', 'jpeg', 'gif'] %}
+                                        <img src="{{ url_for('static', filename=prescription.file_path.replace('static/', '')) }}" 
+                                             class="img-thumbnail" style="max-height: 200px;">
+                                    {% endif %}
+                                    <div>
+                                        <p class="mb-1"><strong>File:</strong> {{ prescription.file_name }}</p>
+                                        <a href="{{ url_for('static', filename=prescription.file_path.replace('static/', '')) }}" 
+                                           class="btn btn-sm btn-success" target="_blank" download>
+                                            Download Prescription
+                                        </a>
+                                    </div>
+                                </div>
+                                {% else %}
+                                <p class="text-muted">No file attached to this prescription.</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        {% if prescription.instructions %}
+                        <div class="row">
+                            <div class="col-md-12">
+                                <h6 class="border-bottom pb-2">Instructions</h6>
+                                <div class="bg-light p-3 rounded">
+                                    {{ prescription.instructions }}
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        {% elif request.method == 'POST' and not prescriptions and patient %}
+        <div class="alert alert-warning">
+            <h5>No Prescriptions Found</h5>
+            <p class="mb-0">No prescriptions were found for patient <strong>{{ patient.name }}</strong> (Aadhar: {{ patient.aadhar_id }}).</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+.card.border-success {
+    border-width: 2px;
+}
+.table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+}
+.badge {
+    font-size: 0.8rem;
+}
+</style>
+{% endblock %}

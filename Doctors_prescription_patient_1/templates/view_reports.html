@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+
+{% block title %}Brain Signal Reports - HealthCare AI{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+
+    <!-- Header -->
+    <div class="card glass-effect mb-4">
+        <div class="card-body">
+            <h2 class="gradient-text mb-2">
+                <i class="fas fa-brain me-2"></i>Brain Signal Reports
+            </h2>
+            <p class="text-muted mb-0">
+                <i class="fas fa-id-card me-2"></i>Patient Aadhar: <strong>{{ aadhar_id }}</strong>
+            </p>
+        </div>
+    </div>
+
+    {% if reports %}
+        {% for r in reports %}
+        <div class="card mb-4 hover-lift">
+            <div class="card-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span><i class="fas fa-file-medical me-2"></i><strong>Report #{{ r.id }}</strong></span>
+                    <span><i class="fas fa-calendar me-2"></i>{{ r.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
+                </div>
+            </div>
+
+            <div class="card-body">
+
+                <h5>Extracted Features (F1–F85)</h5>
+                <div class="table-responsive" style="max-height:400px; overflow-y:auto;">
+                    <table class="table table-striped table-bordered table-sm">
+                        <thead class="table-dark sticky-top">
+                            <tr>
+                                <th style="width: 30%;">Feature</th>
+                                <th style="width: 70%;">Value</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if r['features'] %}
+                                {% set features_str = r['features'] %}
+                                {% if features_str is string %}
+                                    {# Parse the string - could be JSON array or comma-separated #}
+                                    {% if features_str.startswith('[') %}
+                                        {# JSON array format #}
+                                        {% set feature_list = features_str | fromjson %}
+                                    {% else %}
+                                        {# Comma-separated format #}
+                                        {% set feature_list = features_str.split(',') %}
+                                    {% endif %}
+                                {% else %}
+                                    {% set feature_list = features_str %}
+                                {% endif %}
+                                
+                                {% for value in feature_list %}
+                                    <tr>
+                                        <td><strong>F{{ loop.index }}</strong></td>
+                                        <td>{{ value | trim }}</td>
+                                    </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="2" class="text-center text-muted">No features data available</td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <hr>
+
+                <!-- AI Analysis Result -->
+                <h5 class="mb-3">
+                    <i class="fas fa-robot me-2"></i>AI Analysis Result
+                </h5>
+                <div class="alert alert-{% if 'Normal' in r['result'] %}success{% elif 'Pre-seizure' in r['result'] %}warning{% elif 'Seizure' in r['result'] %}danger{% else %}info{% endif %} d-flex align-items-center">
+                    <div class="me-3">
+                        {% if 'Normal' in r['result'] %}
+                            <i class="fas fa-check-circle fa-3x"></i>
+                        {% elif 'Pre-seizure' in r['result'] %}
+                            <i class="fas fa-exclamation-triangle fa-3x"></i>
+                        {% elif 'Seizure' in r['result'] %}
+                            <i class="fas fa-bolt fa-3x"></i>
+                        {% else %}
+                            <i class="fas fa-heartbeat fa-3x"></i>
+                        {% endif %}
+                    </div>
+                    <div class="flex-grow-1">
+                        <h4 class="mb-0">{{ r['result'] }}</h4>
+                        <small>AI Classification Result</small>
+                    </div>
+                </div>
+
+                <!-- Delete Report Button -->
+                <div class="text-end mt-3">
+                    <form method="POST" action="{{ url_for('delete_report', report_id=r.id) }}" 
+                          onsubmit="return confirm('Are you sure you want to delete this report? This action cannot be undone.');" 
+                          style="display: inline;">
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash me-2"></i>Delete Report
+                        </button>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+        {% endfor %}
+
+    {% else %}
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i>
+            No reports available for this patient yet.
+        </div>
+    {% endif %}
+
+    <div class="text-center mt-4">
+        <a href="{{ url_for('doctor_dashboard') }}" class="btn btn-primary">
+            <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+        </a>
+    </div>
+</div>
+
+<style>
+.sticky-top {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+</style>
+{% endblock %}

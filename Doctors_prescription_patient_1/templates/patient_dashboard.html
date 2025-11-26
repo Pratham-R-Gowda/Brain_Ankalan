@@ -1,0 +1,295 @@
+{% extends "base.html" %}
+
+{% block title %}Patient Dashboard - HealthCare AI{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card glass-effect">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h2 class="gradient-text mb-2">
+                            <i class="fas fa-user-circle me-2"></i>Patient Dashboard
+                        </h2>
+                        <p class="mb-0 text-muted">Welcome back! Manage your health records</p>
+                    </div>
+                    <a href="{{ url_for('brain_signal_ai', aadhar_id=patient_aadhar) }}" 
+                       class="btn btn-primary btn-lg">
+                        <i class="fas fa-brain me-2"></i>AI Brain Analysis
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Dashboard Charts -->
+{% if chart_labels %}
+<div class="row mb-4">
+    <!-- Health Timeline Chart -->
+    <div class="col-md-8 mb-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="mb-3">
+                    <i class="fas fa-chart-line me-2"></i>Brain Health Timeline
+                </h5>
+                <canvas id="healthTimelineChart" height="80"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Result Distribution Chart -->
+    <div class="col-md-4 mb-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="mb-3">
+                    <i class="fas fa-chart-pie me-2"></i>Result Distribution
+                </h5>
+                <canvas id="resultPieChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+        
+        <div class="row mt-4">
+            <!-- My Doctors Section -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">My Doctors</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if selected_doctors %}
+                            {% for doctor in selected_doctors %}
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <h6>Dr. {{ doctor.name }}</h6>
+                                    <p class="mb-1"><strong>Specialization:</strong> {{ doctor.specialization }}</p>
+                                    <p class="mb-1"><strong>Email:</strong> {{ doctor.email }}</p>
+                                    <p class="mb-1"><strong>Phone:</strong> {{ doctor.phone }}</p>
+                                    <p class="mb-1"><strong>Connected since:</strong> {{ doctor.connected_date.strftime('%Y-%m-%d') }}</p>
+                                    <a href="{{ url_for('remove_doctor', doctor_id=doctor.doctor_id) }}" class="btn btn-sm btn-danger mt-2">Remove Doctor</a>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <p class="text-muted">No doctors selected yet.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Available Doctors Section -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Available Doctors</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if all_doctors %}
+                            {% for doctor in all_doctors %}
+                            <div class="card mb-3">
+                                <div class="card-body">
+                                    <h6>Dr. {{ doctor.name }}</h6>
+                                    <p class="mb-1"><strong>Specialization:</strong> {{ doctor.specialization }}</p>
+                                    <p class="mb-1"><strong>Email:</strong> {{ doctor.email }}</p>
+                                    <form method="POST" action="{{ url_for('select_doctor') }}">
+                                        <input type="hidden" name="doctor_id" value="{{ doctor.doctor_id }}">
+                                        <button type="submit" class="btn btn-sm btn-success mt-2">Select Doctor</button>
+                                    </form>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <p class="text-muted">No doctors available.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+ <a href="{{ url_for('brain_signal_ai', aadhar_id=patient_aadhar) }}" 
+                                       class="btn btn-sm btn-success mt-2">
+                                        Check Brain Signal Using AI
+                                    </a>
+        <!-- Prescriptions Section -->
+        <div class="row mt-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">My Prescriptions</h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- In the prescriptions section of patient_dashboard.html, update the file display part: -->
+                        {% if prescriptions %}
+                            {% for prescription in prescriptions %}
+                                <div class="card mb-3">
+                                    <div class="card-header">
+                                        <h6 class="mb-0">Prescription ID: {{ prescription.prescription_id }}</h6>
+                                    </div>
+
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <p><strong>Date:</strong> {{ prescription.prescription_date }}</p>
+                                                <p><strong>Doctor:</strong> Dr. {{ prescription.doctor_name }}</p>
+                                                <p><strong>Specialization:</strong> {{ prescription.specialization }}</p>
+                                            </div>
+
+                                            <div class="col-md-6">
+                                                <p><strong>Diagnosis:</strong> {{ prescription.diagnosis }}</p>
+                                                {% if prescription.file_type %}
+                                                <p><strong>File Type:</strong> {{ prescription.file_type.upper() }}</p>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-md-12">
+                                                <p><strong>Prescription File:</strong>
+
+                                                {% if prescription.file_name and prescription.file_path %}
+                                                    <a 
+                                                        href="{{ url_for('static', filename=prescription.file_path.replace('static/','').replace('\\','/')) }}"
+                                                        class="btn btn-success btn-sm"
+                                                        download>
+                                                        Download Prescription
+                                                    </a>
+                                                {% else %}
+                                                    <span class="text-muted ms-2">No file attached</span>
+                                                {% endif %}
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        <div class="row mt-2">
+                                            <div class="col-md-12">
+                                                <p><strong>Instructions:</strong> {{ prescription.instructions }}</p>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Delete Button -->
+                                        <div class="row mt-3">
+                                            <div class="col-md-12">
+                                                <form method="POST" action="{{ url_for('delete_prescription', prescription_id=prescription.id) }}" 
+                                                      onsubmit="return confirm('Are you sure you want to delete this prescription? This action cannot be undone.');" 
+                                                      style="display: inline;">
+                                                    <button type="submit" class="btn btn-danger btn-sm">
+                                                        <i class="fas fa-trash me-1"></i>Delete Prescription
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <p class="text-muted">No prescriptions found.</p>
+                        {% endif %}
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+<!-- Chart.js Library -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<script>
+{% if chart_labels %}
+// Health Timeline Chart
+const timelineCtx = document.getElementById('healthTimelineChart');
+new Chart(timelineCtx, {
+    type: 'line',
+    data: {
+        labels: {{ chart_labels | tojson }},
+        datasets: [{
+            label: 'Brain Health Status',
+            data: {{ chart_data | tojson }},
+            borderColor: 'rgb(102, 126, 234)',
+            backgroundColor: 'rgba(102, 126, 234, 0.1)',
+            tension: 0.4,
+            fill: true,
+            pointRadius: 6,
+            pointHoverRadius: 8,
+            pointBackgroundColor: 'rgb(102, 126, 234)',
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                display: false
+            },
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        const labels = ['Normal', 'Pre-seizure', 'Seizure', 'Post-seizure'];
+                        return labels[context.parsed.y] || 'Unknown';
+                    }
+                }
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                max: 3,
+                ticks: {
+                    stepSize: 1,
+                    callback: function(value) {
+                        const labels = ['Normal', 'Pre-seizure', 'Seizure', 'Post-seizure'];
+                        return labels[value] || '';
+                    }
+                }
+            }
+        }
+    }
+});
+
+// Result Distribution Pie Chart
+const pieCtx = document.getElementById('resultPieChart');
+new Chart(pieCtx, {
+    type: 'doughnut',
+    data: {
+        labels: ['Normal', 'Pre-seizure', 'Seizure', 'Post-seizure'],
+        datasets: [{
+            data: [
+                {{ result_counts['Normal'] }},
+                {{ result_counts['Pre-seizure'] }},
+                {{ result_counts['Seizure'] }},
+                {{ result_counts['Post-seizure'] }}
+            ],
+            backgroundColor: [
+                'rgba(40, 167, 69, 0.8)',
+                'rgba(255, 193, 7, 0.8)',
+                'rgba(220, 53, 69, 0.8)',
+                'rgba(23, 162, 184, 0.8)'
+            ],
+            borderColor: [
+                'rgb(40, 167, 69)',
+                'rgb(255, 193, 7)',
+                'rgb(220, 53, 69)',
+                'rgb(23, 162, 184)'
+            ],
+            borderWidth: 2
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            }
+        }
+    }
+});
+{% endif %}
+</script>
