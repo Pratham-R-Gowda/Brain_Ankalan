@@ -65,6 +65,11 @@ Doctors_prescription_patient_1/static/uploads/prescriptions/*
 # Model files (optional - uncomment if you want to exclude large model files)
 # *.pkl
 
+# Training data and research files
+EEG-Brainwave-Sensor-Dataset/
+*.ipynb
+*.docx
+
 # Temporary files
 *.tmp
 *.bak
